@@ -6,14 +6,21 @@ namespace RobotConsole
     {
         private bool IsPlaced { get; set; }
 
-        public Robot(int x, int y, string direction)
+        /// <summary>
+        /// Robot created at the start of each command script.
+        /// </summary>
+        public Robot()
         {
             // Initialize the Robot.
             this.IsPlaced = false;
         }
 
-        public void PlaceRobot()
+        public void PlaceRobot(int x, int y, string direction)
         {
+            // Instantiate a Position.
+            // Instantiate a Bearing.
+
+
             IsPlaced = true;
         }
     }
