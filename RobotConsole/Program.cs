@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RobotConsole
 {
@@ -10,6 +6,11 @@ namespace RobotConsole
     {
         static void Main(string[] args)
         {
+            CommandParser commandParser = new CommandParser(@"./RobotCommands");
+            commandParser.ProcessCommandFiles();
+
+            Console.WriteLine("Press [Enter] to continue...");
+            Console.ReadLine();
         }
     }
 }
