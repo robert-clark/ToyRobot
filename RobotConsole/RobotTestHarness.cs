@@ -1,49 +1,53 @@
-﻿using System;
+﻿using RobotConsole.Exceptions;
+using System;
 using System.IO;
 
 namespace RobotConsole
 {
-    class CommandParser
+    class RobotTestHarness
     {
         DirectoryInfo directoryInfo;
 
-        public CommandParser(string directoryPath)
+        public RobotTestHarness(string directoryPath)
         {
             directoryInfo = new DirectoryInfo(directoryPath);
         }
 
         public void ProcessCommandFiles()
         {
-
-            foreach (FileInfo fi in directoryInfo.GetFiles())
+            foreach (FileInfo fi in directoryInfo.GetFiles("TestClass_*.txt"))
             {
-                
-
                 Console.WriteLine($"Running script from {fi.Name} at {DateTime.Now}...");
 
-                // TODO: Create a new Robot for each run of the commands script.
+                // Create a new Robot for each run of the commands script.
                 Console.WriteLine("Initializing new Robot...");
-                Console.WriteLine();
+                Robot robot = new Robot();
 
                 try
                 {
                     using (StreamReader sr = new StreamReader(fi.FullName))
                     {
-                        int lineNum = 1;
-                        string line;  
+                        string line;
 
                         while ((line = sr.ReadLine()) != null)
                         {
-
                             // Split into space delimited substrings.
                             string[] commandSubstrings;
                             commandSubstrings = line.Split(' ');
 
                             // Parse to see if the first substring in a valid command.
-                            ParseCommandLine(commandSubstrings);
-
-                            lineNum++;
-
+                            try
+                            {
+                                ParseCommandLine(commandSubstrings, ref robot);
+                            }
+                            catch(RobotPlacementException ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
+                            catch(Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);
+                            }
                         }
                     }
                 }
@@ -54,22 +58,21 @@ namespace RobotConsole
                 }
                 finally
                 {
-                    Console.WriteLine("Output:...");
-                    Console.WriteLine();
+                    if(robot.GetIsPlaced() == false)
+                        Console.WriteLine("ERROR: The Robot was not successfully placed...");
                 }
-                
+                Console.WriteLine();
             }
         }
 
-        private void ParseCommandLine(string[] commands)
+        private void ParseCommandLine(string[] commands, ref Robot robot)
         {
             string[] placeSubstrings;
 
             switch (commands[0]?.ToUpper() ?? "")
             {
-
                 case "PLACE":
-                    // Parse the X,Y,DIRECTION substrings.
+                    // Parse the x, y, direction substrings.
                     if(commands[1] != null)
                     {
                         placeSubstrings = commands[1].Split(',');
@@ -84,8 +87,16 @@ namespace RobotConsole
                                         placeSubstrings[2] == "SOUTH" |
                                         placeSubstrings[2] == "WEST"))
                                 {
+                                    Console.WriteLine($"PLACE {x},{y},{placeSubstrings[2]}");
 
-                                    Console.WriteLine($"PlaceRobot({x}, {y}, {placeSubstrings[2]});");
+                                    try
+                                    {
+                                        robot.PlaceRobot(x, y, placeSubstrings[2]);
+                                    }
+                                    catch(Exception ex)
+                                    {
+                                        Console.WriteLine(ex.Message);
+                                    }
                                 }
                                 else
                                     Console.WriteLine($"DIRECTION: {placeSubstrings[2]} was unsuccessfully parsed to LEFT/RIGHT!");
@@ -99,17 +110,32 @@ namespace RobotConsole
                     break;
 
                 case "MOVE":
-                    Console.WriteLine("MoveRobot();"); 
+                    try
+                    {
+                        Console.WriteLine("MOVE");
+                        robot.MoveRobot();
+                    }
+                    catch(MoveOutOfBoundsException ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                     break;
+
                 case "LEFT":
-                    Console.WriteLine("TurnRobotLeft();"); 
+                    Console.WriteLine("LEFT");
+                    robot.TurnRobot("LEFT");
                     break;
+
                 case "RIGHT":
-                    Console.WriteLine("TurnRobotRight();");
+                    Console.WriteLine("RIGHT");
+                    robot.TurnRobot("RIGHT");
                     break;
+
                 case "REPORT":
-                    Console.WriteLine("Report()");
+                    Console.WriteLine("REPORT");
+                    Console.WriteLine(robot.ReportRobot());
                     break;
+
                 default:
                     Console.WriteLine($"{commands[0]} was unsuccessfully parsed into a valid robot command!");
                     break;
