@@ -15,9 +15,9 @@ namespace RobotConsole
 
         public void ProcessCommandFiles()
         {
-            foreach (FileInfo fi in directoryInfo.GetFiles("TestClass_*.txt"))
+            foreach (FileInfo fi in directoryInfo.GetFiles("TestCase_*.txt"))
             {
-                Console.WriteLine($"Running script from {fi.Name} at {DateTime.Now}...");
+                Console.WriteLine($"Running script {fi.Name} at {DateTime.Now}...");
 
                 // Create a new Robot for each run of the commands script.
                 Console.WriteLine("Initializing new Robot...");
@@ -31,35 +31,39 @@ namespace RobotConsole
 
                         while ((line = sr.ReadLine()) != null)
                         {
-                            // Split into space delimited substrings.
-                            string[] commandSubstrings;
-                            commandSubstrings = line.Split(' ');
+                            // Check line isn't just white space.
+                            if(line.Trim().Length > 0)
+                            {
+                                // Split into space delimited substrings.
+                                string[] commandSubstrings;
+                                commandSubstrings = line.Split(' ');
 
-                            // Parse to see if the first substring in a valid command.
-                            try
-                            {
-                                ParseCommandLine(commandSubstrings, ref robot);
-                            }
-                            catch(RobotPlacementException ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                            }
-                            catch(Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);
-                            }
+                                // Parse to see if the first substring is a valid command.
+                                try
+                                {
+                                    ParseCommandLine(commandSubstrings, ref robot);
+                                }
+                                catch (RobotPlacementException ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine(ex.Message);
+                                }
+                            }  
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("The file could not be read!");
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine($"{ex.GetType().Name}: {ex.Message}");
                 }
                 finally
                 {
                     if(robot.GetIsPlaced() == false)
-                        Console.WriteLine("ERROR: The Robot was not successfully placed...");
+                        Console.WriteLine("This test script ran without the Robot being successfully placed...");
                 }
                 Console.WriteLine();
             }
@@ -71,7 +75,11 @@ namespace RobotConsole
 
             switch (commands[0]?.ToUpper() ?? "")
             {
+
                 case "PLACE":
+                    // Write command to console.
+                    Console.WriteLine($"{commands[0].ToUpper()} {commands[1]?.ToUpper()}");
+
                     // Parse the x, y, direction substrings.
                     if(commands[1] != null)
                     {
@@ -87,26 +95,26 @@ namespace RobotConsole
                                         placeSubstrings[2] == "SOUTH" |
                                         placeSubstrings[2] == "WEST"))
                                 {
-                                    Console.WriteLine($"PLACE {x},{y},{placeSubstrings[2]}");
-
                                     try
                                     {
                                         robot.PlaceRobot(x, y, placeSubstrings[2]);
                                     }
-                                    catch(Exception ex)
+                                    catch(RobotPlacementException ex)
                                     {
-                                        Console.WriteLine(ex.Message);
+                                        Console.WriteLine($" -> Robot not placed! ({ex.GetType().Name})");
+                                        Console.WriteLine($" -> {ex.Message}");
                                     }
                                 }
                                 else
-                                    Console.WriteLine($"DIRECTION: {placeSubstrings[2]} was unsuccessfully parsed to LEFT/RIGHT!");
+                                    Console.WriteLine($" -> Cardinal direction was not valid! ({placeSubstrings[2]})");
                             }
                             else
-                                Console.WriteLine($"Y: {placeSubstrings[1]} was unsuccessfully parsed to an int!");
+                                Console.WriteLine($" -> Y was unsuccessfully parsed to an int! ({placeSubstrings[1]})");
                         }
                         else
-                            Console.WriteLine($"X: {placeSubstrings[0]} was unsuccessfully parsed to an int!");
+                            Console.WriteLine($" -> X was unsuccessfully parsed to an int! ({placeSubstrings[0]})");
                     }
+
                     break;
 
                 case "MOVE":
@@ -117,23 +125,68 @@ namespace RobotConsole
                     }
                     catch(MoveOutOfBoundsException ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine($" -> Can't move off the grid! ({ex.GetType().Name})");
                     }
+                    catch(NullReferenceException ex)
+                    {
+                        Console.WriteLine($" -> Robot not placed! ({ex.GetType().Name})");
+                    }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine($" -> {ex.GetType().Name}: {ex.Message}");
+                    }
+
                     break;
 
                 case "LEFT":
-                    Console.WriteLine("LEFT");
-                    robot.TurnRobot("LEFT");
+                    try
+                    {
+                        Console.WriteLine("LEFT");
+                        robot.TurnRobot("LEFT");
+                    }
+                    catch (NullReferenceException ex)
+                    {
+                        Console.WriteLine($" -> Robot not placed! ({ex.GetType().Name})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($" -> {ex.GetType().Name}: {ex.Message}");
+                    }
+
                     break;
 
                 case "RIGHT":
-                    Console.WriteLine("RIGHT");
-                    robot.TurnRobot("RIGHT");
+                    try
+                    {
+                        Console.WriteLine("RIGHT");
+                        robot.TurnRobot("RIGHT");
+                    }
+                    catch (NullReferenceException ex)
+                    {
+                        Console.WriteLine($" -> Robot not placed! ({ex.GetType().Name})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($" -> {ex.GetType().Name}: {ex.Message}");
+                    }
+
                     break;
 
                 case "REPORT":
-                    Console.WriteLine("REPORT");
-                    Console.WriteLine(robot.ReportRobot());
+                    try
+                    {
+                        Console.WriteLine("REPORT");
+                        Console.WriteLine(robot.ReportRobot());
+                    }
+                    catch (NullReferenceException ex)
+                    {
+                        Console.WriteLine($" -> Robot not placed! ({ex.GetType().Name})");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($" -> {ex.GetType().Name}: {ex.Message}");
+                    }
+
                     break;
 
                 default:

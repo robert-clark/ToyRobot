@@ -93,14 +93,7 @@ namespace RobotConsole
         /// </summary>
         public void MoveRobot()
         {
-            try
-            {
-                this.Position.MoveForward(Direction.Facing);
-            }
-            catch(MoveOutOfBoundsException ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+            this.Position.MoveForward(Direction.Facing);
         }
 
         public string ReportRobot()
